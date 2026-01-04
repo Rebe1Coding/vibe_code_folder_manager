@@ -20,17 +20,31 @@ class StructureParser:
         Returns:
             List[Tuple[str, int]]: Список кортежей (имя_файла_или_папки, уровень)
         """
-        lines = text.split('\n')
+        lines = text.strip().split('\n')
         result = []
         
-        for line in lines[1:]:
+        for line in lines:
+            if not line.strip():
+                continue
+            
+            # Удаляем комментарии (все после #)
             line = re.sub(r'#.*$', '', line)
-            line = line.split()
-            indent_level = (len(line)-1)
-            if len(line) != 0:
-                if line[-1]!= '│' and line[-1] != '':
-                    cleaned = line[-1]
-                    result.append((cleaned, indent_level))
+            
+            # Очищаем от символов дерева и лишних пробелов
+            cleaned = line
+            for symbol in self.tree_symbols:
+                cleaned = cleaned.replace(symbol, ' ')
+            
+            # Убираем множественные пробелы
+            cleaned = re.sub(r' +', ' ', cleaned).strip()
+            
+            if not cleaned:
+                continue
+            
+            # Вычисляем уровень вложенности по количеству пробелов в начале
+            indent_level = (len(line.lstrip()) - len(cleaned) )//4
+            
+            result.append((cleaned, indent_level))
         
         return result
     
@@ -57,9 +71,9 @@ class StructureParser:
         stack = []  # Стек для отслеживания текущего пути
         
         # Обрабатываем остальные элементы (начиная со второго)
-        for name, level in parsed[2:]:
+        for name, level in parsed[1:]:
             # Корректируем стек под текущий уровень (относительно корня)
-            adjusted_level = level - root_level
+            adjusted_level = level - root_level - 1
             while len(stack) > adjusted_level:
                 stack.pop()
             
@@ -80,7 +94,6 @@ class StructureParser:
                 stack.append(clean_name)
         
         return root_name, paths
-
 class StructureCreator:
     """Создатель файловой структуры"""
     

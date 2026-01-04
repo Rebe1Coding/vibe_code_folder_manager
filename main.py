@@ -3,7 +3,6 @@ from ui import ProjectStructureApp
 
 
 def main(page: ft.Page):
-    """Точка входа приложения"""
     ProjectStructureApp(page)
 
 
